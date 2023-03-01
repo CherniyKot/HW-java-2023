@@ -1,6 +1,12 @@
 package ru.itmo.mit.trie;
 
+import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.RepetitionInfo;
 import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -154,4 +160,31 @@ public class TrieTests {
         assertNull(t.nextString("ZZZ", 1));
     }
 
+    @RepeatedTest(value = 6)
+    public void testStress(RepetitionInfo repetitionInfo) {
+        var set = new HashSet<String>();
+        var trie = new TrieImpl();
+        var rand = new Random();
+        var strings = new ArrayList<String>();
+        int testValue = (int) Math.pow(10, repetitionInfo.getCurrentRepetition());
+
+        for (int i = 0; i < testValue / 10; i++) {
+            int len = rand.nextInt(90) + 10;
+            byte[] buf = new byte[len];
+            rand.nextBytes(buf);
+            strings.add(new String(buf));
+        }
+
+        for (int i = 0; i < testValue; i++) {
+            int op = rand.nextInt(4);
+            int val = rand.nextInt(strings.size());
+            var str = strings.get(val);
+            switch (op) {
+                case 0 -> assertEquals(set.add(str), trie.add(str));
+                case 1 -> assertEquals(set.remove(str), trie.remove(str));
+                case 2 -> assertEquals(set.contains(str), trie.contains(str));
+                case 3 -> assertEquals(set.size(), trie.size());
+            }
+        }
+    }
 }
