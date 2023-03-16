@@ -5,7 +5,9 @@ import org.junit.jupiter.api.Test;
 
 import java.util.AbstractMap;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @SuppressWarnings("Convert2MethodRef")
 public class FunctionalTest {
@@ -56,7 +58,7 @@ public class FunctionalTest {
 
         for (int i = 0; i < 100; i++) {
             for (int j = 0; j < 100; j++) {
-                String s = String.valueOf(i+j);
+                String s = String.valueOf(i + j);
                 Assertions.assertEquals(s, sumToString.apply(i, j));
             }
         }
@@ -143,15 +145,19 @@ public class FunctionalTest {
         Assertions.assertFalse(falsePredicate.apply(100100));
     }
 
+    <ReturnType> List<ReturnType> IteratorToList(Iterable<ReturnType> iterable) {
+        return StreamSupport.stream(iterable.spliterator(), false).collect(Collectors.toList());
+    }
+
     @Test
     public void testCollections() {
         var testIntList = Arrays.asList(1, 2, 3, 4, 5);
         var mapResultList = Arrays.asList(11, 12, 13, 14, 15);
-        Assertions.assertEquals(mapResultList, Collections.map(arg -> arg + 10, testIntList));
+        Assertions.assertEquals(mapResultList, IteratorToList(Collections.map(arg -> arg + 10, testIntList)));
 
-        Assertions.assertEquals(testIntList.stream().filter(arg -> arg % 2 == 0).collect(Collectors.toList()), Collections.filter(arg -> arg % 2 == 0, testIntList));
-        Assertions.assertEquals(testIntList.stream().takeWhile(arg -> arg < 3).collect(Collectors.toList()), Collections.takeWhile(arg -> arg < 3, testIntList));
-        Assertions.assertEquals(testIntList.stream().takeWhile(arg -> !(arg < 3)).collect(Collectors.toList()), Collections.takeUnless(arg -> arg < 3, testIntList));
+        Assertions.assertEquals(testIntList.stream().filter(arg -> arg % 2 == 0).collect(Collectors.toList()), IteratorToList(Collections.filter(arg -> arg % 2 == 0, testIntList)));
+        Assertions.assertEquals(testIntList.stream().takeWhile(arg -> arg < 3).collect(Collectors.toList()), IteratorToList(Collections.takeWhile(arg -> arg < 3, testIntList)));
+        Assertions.assertEquals(testIntList.stream().takeWhile(arg -> !(arg < 3)).collect(Collectors.toList()), IteratorToList(Collections.takeUnless(arg -> arg < 3, testIntList)));
 
         var testStringList = Arrays.asList("Hello", "world", "!");
         var foldrResult = "Hello world ! Hey!";
