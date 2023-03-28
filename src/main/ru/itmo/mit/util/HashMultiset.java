@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
+@SuppressWarnings({"unchecked", "SuspiciousMethodCalls"})
 public class HashMultiset<E> implements Multiset<E> {
 
     LinkedHashMap<E, Integer> map = new LinkedHashMap<>();
@@ -38,7 +39,7 @@ public class HashMultiset<E> implements Multiset<E> {
                     @Override
                     public Entry<E> next() {
                         var r = internalIterator.next();
-                        return new Entry<E>() {
+                        return new Entry<>() {
                             @Override
                             public E getElement() {
                                 return r.getKey();
@@ -89,7 +90,7 @@ public class HashMultiset<E> implements Multiset<E> {
 
     @Override
     public @NotNull Iterator<E> iterator() {
-        return new Iterator<E>() {
+        return new Iterator<>() {
             int c = 0;
             boolean removed=false;
             final Iterator<Entry<E>> internalIterator = entrySet().iterator();
@@ -135,9 +136,8 @@ public class HashMultiset<E> implements Multiset<E> {
         };
     }
 
-    @NotNull
     @Override
-    public Object[] toArray() {
+    public Object @NotNull [] toArray() {
         Object[] result = new Object[size()];
         int c=0;
         for (Map.Entry<E,Integer>e : map.entrySet()){
@@ -148,9 +148,8 @@ public class HashMultiset<E> implements Multiset<E> {
         return result;
     }
 
-    @NotNull
     @Override
-    public <T> T[] toArray(@NotNull T[] a) {
+    public <T> T @NotNull [] toArray(T @NotNull [] a) {
         return (T[])toArray();
     }
 
