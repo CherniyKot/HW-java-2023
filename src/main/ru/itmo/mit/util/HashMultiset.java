@@ -11,8 +11,7 @@ public class HashMultiset<E> implements Multiset<E> {
 
     @Override
     public int count(Object element) {
-        var r = map.get(element);
-        return r == null ? 0 : r;
+        return map.getOrDefault(element,0);
     }
 
     @Override
