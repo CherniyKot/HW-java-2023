@@ -90,10 +90,9 @@ public class HashMultiset<E> implements Multiset<E> {
     @Override
     public @NotNull Iterator<E> iterator() {
         return new Iterator<E>() {
-
             int c = 0;
             boolean removed=false;
-            Iterator<Entry<E>> internalIterator = entrySet().iterator();
+            final Iterator<Entry<E>> internalIterator = entrySet().iterator();
             Entry<E> currentElem = internalIterator.hasNext()?internalIterator.next():null;
 
             @Override
@@ -123,8 +122,15 @@ public class HashMultiset<E> implements Multiset<E> {
                     throw new IllegalStateException();
                 }
                 removed=true;
-                c--;
-                HashMultiset.this.remove(currentElem.getElement());
+                if(currentElem.getCount()>1) {
+                    if(c>0){
+                        c--;
+                    }
+                    HashMultiset.this.remove(currentElem.getElement());
+                }
+                else{
+                internalIterator.remove();
+                }
             }
         };
     }
