@@ -367,9 +367,7 @@ public class HashMultisetTest {
     }
 
     private static <E> Multiset<E> createHashMultiset() {
-        throw new UnsupportedOperationException();
-        // TODO: uncomment
-        // return new HashMultiset<>();
+         return new HashMultiset<>();
     }
 }
 
