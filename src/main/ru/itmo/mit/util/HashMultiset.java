@@ -11,7 +11,7 @@ public class HashMultiset<E> implements Multiset<E> {
 
     @Override
     public int count(Object element) {
-        return map.getOrDefault(element,0);
+        return map.getOrDefault(element, 0);
     }
 
     @Override
@@ -22,14 +22,13 @@ public class HashMultiset<E> implements Multiset<E> {
     @Override
     public Set<Entry<E>> entrySet() {
         return new AbstractSet<>() {
-
-            final Set<Map.Entry<E, Integer>> internalSet = map.entrySet();
+            private final Set<Map.Entry<E, Integer>> internalSet = map.entrySet();
 
             @Override
             public Iterator<Entry<E>> iterator() {
-
-                Iterator<Map.Entry<E, Integer>> internalIterator = internalSet.iterator();
                 return new Iterator<>() {
+                    private final Iterator<Map.Entry<E, Integer>> internalIterator = internalSet.iterator();
+
                     @Override
                     public boolean hasNext() {
                         return internalIterator.hasNext();
@@ -68,9 +67,9 @@ public class HashMultiset<E> implements Multiset<E> {
     @Override
     public int size() {
         int result = 0;
-        for (int e: map.values()) {
-            result+=e;
-            if(result<0){
+        for (int e : map.values()) {
+            result += e;
+            if (result < 0) {
                 return Integer.MAX_VALUE;
             }
         }
@@ -90,46 +89,42 @@ public class HashMultiset<E> implements Multiset<E> {
     @Override
     public @NotNull Iterator<E> iterator() {
         return new Iterator<>() {
-            int c = 0;
-            boolean removed=false;
-            final Iterator<Entry<E>> internalIterator = entrySet().iterator();
-            Entry<E> currentElem = internalIterator.hasNext()?internalIterator.next():null;
+            private int c = 0;
+            private boolean removed = false;
+            private final Iterator<Entry<E>> internalIterator = entrySet().iterator();
+            private Entry<E> currentElem = internalIterator.hasNext() ? internalIterator.next() : null;
 
             @Override
             public boolean hasNext() {
-                return currentElem!=null && (c < currentElem.getCount()|| internalIterator.hasNext());
+                return currentElem != null && (c < currentElem.getCount() || internalIterator.hasNext());
             }
 
             @Override
             public E next() {
-                removed=false;
-                if(currentElem==null){
+                removed = false;
+                if (currentElem == null) {
                     throw new NoSuchElementException();
                 }
-                if(c<currentElem.getCount()){
+                if (c < currentElem.getCount()) {
                     c++;
-                    return currentElem.getElement();
-                }else{
-                    c=0;
-                    currentElem=internalIterator.next();
-                    return currentElem.getElement();
+                } else {
+                    c = 0;
+                    currentElem = internalIterator.next();
                 }
+                return currentElem.getElement();
             }
 
             @Override
             public void remove() {
-                if(removed){
+                if (removed) {
                     throw new IllegalStateException();
                 }
-                removed=true;
-                if(currentElem.getCount()>1) {
-                    if(c>0){
-                        c--;
-                    }
+                removed = true;
+                if (currentElem.getCount() > 1) {
+                    if (c > 0) c--;
                     HashMultiset.this.remove(currentElem.getElement());
-                }
-                else{
-                internalIterator.remove();
+                } else {
+                    internalIterator.remove();
                 }
             }
         };
@@ -138,10 +133,10 @@ public class HashMultiset<E> implements Multiset<E> {
     @Override
     public Object @NotNull [] toArray() {
         Object[] result = new Object[size()];
-        int c=0;
-        for (Map.Entry<E,Integer>e : map.entrySet()){
+        int c = 0;
+        for (Map.Entry<E, Integer> e : map.entrySet()) {
             for (int i = 0; i < e.getValue(); i++) {
-                result[c++]=e.getKey();
+                result[c++] = e.getKey();
             }
         }
         return result;
@@ -149,7 +144,7 @@ public class HashMultiset<E> implements Multiset<E> {
 
     @Override
     public <T> T @NotNull [] toArray(T @NotNull [] a) {
-        return (T[])toArray();
+        return (T[]) toArray();
     }
 
     @Override
@@ -170,8 +165,7 @@ public class HashMultiset<E> implements Multiset<E> {
         }
         if (r > 1) {
             map.put(o_, r - 1);
-        }
-        else{
+        } else {
             map.remove(o_);
         }
         return true;
@@ -184,18 +178,18 @@ public class HashMultiset<E> implements Multiset<E> {
 
     @Override
     public boolean addAll(@NotNull Collection<? extends E> c) {
-        var result=false;
-        for (E o:c) {
-            result|=add(o);
+        var result = false;
+        for (E o : c) {
+            result |= add(o);
         }
         return result;
     }
 
     @Override
     public boolean removeAll(@NotNull Collection<?> c) {
-        var result=false;
-        for (Object o:c) {
-            result|=remove(o);
+        var result = false;
+        for (Object o : c) {
+            result |= remove(o);
         }
         return result;
     }
