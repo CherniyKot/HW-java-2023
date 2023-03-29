@@ -17,14 +17,14 @@ public interface Function2<RetType, ArgType1, ArgType2> extends Function1<RetTyp
 
 
     default Function1<RetType, ArgType2> bind1(ArgType1 arg1) {
-        return (arg2) -> this.apply(arg1, arg2);
+        return arg2 -> this.apply(arg1, arg2);
     }
 
     default Function1<RetType, ArgType1> bind2(ArgType2 arg2) {
         return arg1 -> this.apply(arg1, arg2);
     }
 
-    default Function1<RetType, Map.Entry<ArgType1, ArgType2>> curry() {
-        return arg -> this.apply(arg.getKey(), arg.getValue());
+    default Function1<Function1<RetType, ArgType2>, ArgType1> curry() {
+        return arg1 -> arg2 -> this.apply(arg1, arg2);
     }
 }

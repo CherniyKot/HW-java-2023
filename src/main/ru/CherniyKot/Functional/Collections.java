@@ -8,7 +8,7 @@ import java.util.NoSuchElementException;
 public class Collections {
     static <ReturnType, ArgType> Iterable<ReturnType> map(Function1<ReturnType, ArgType> func, Iterable<ArgType> iterable) {
         return new Iterable<>() {
-            final Iterator<ArgType> internalIterator = iterable.iterator();
+            private final Iterator<ArgType> internalIterator = iterable.iterator();
 
             @NotNull
             @Override
@@ -30,13 +30,13 @@ public class Collections {
 
     static <ArgType> Iterable<ArgType> filter(Predicate<ArgType> pred, Iterable<ArgType> iterable) {
         return new Iterable<>() {
-            final Iterator<ArgType> internalIterator = iterable.iterator();
+            private final Iterator<ArgType> internalIterator = iterable.iterator();
 
             @NotNull
             @Override
             public Iterator<ArgType> iterator() {
                 return new Iterator<>() {
-                    ArgType next;
+                    private ArgType next;
 
                     {
                         while (internalIterator.hasNext()) {
@@ -76,13 +76,13 @@ public class Collections {
 
     static <ArgType> Iterable<ArgType> takeWhile(Predicate<ArgType> pred, Iterable<ArgType> iterable) {
         return new Iterable<>() {
-            final Iterator<ArgType> internalIterator = iterable.iterator();
+            private final Iterator<ArgType> internalIterator = iterable.iterator();
 
             @NotNull
             @Override
             public Iterator<ArgType> iterator() {
                 return new Iterator<>() {
-                    ArgType next;
+                    private ArgType next;
 
                     {
                         if (internalIterator.hasNext()) {
@@ -121,13 +121,13 @@ public class Collections {
 
     static <ArgType> Iterable<ArgType> takeUnless(Predicate<ArgType> pred, Iterable<ArgType> iterable) {
         return new Iterable<>() {
-            final Iterator<ArgType> internalIterator = iterable.iterator();
+            private final Iterator<ArgType> internalIterator = iterable.iterator();
 
             @NotNull
             @Override
             public Iterator<ArgType> iterator() {
                 return new Iterator<>() {
-                    ArgType next;
+                    private ArgType next;
 
                     {
                         if (internalIterator.hasNext()) {

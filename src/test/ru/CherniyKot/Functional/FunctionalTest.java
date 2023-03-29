@@ -3,7 +3,6 @@ package ru.CherniyKot.Functional;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -87,13 +86,11 @@ public class FunctionalTest {
 
         for (int i = 0; i < 100; i++) {
             for (int j = 0; j < 100; j++) {
-                var intPair = new AbstractMap.SimpleEntry<>(i, j);
-                Assertions.assertEquals(sum.apply(i, j), sumCurry.apply(intPair));
+                Assertions.assertEquals(sum.apply(i, j), sumCurry.apply(i).apply(j));
 
                 String is = String.valueOf(i);
                 String js = String.valueOf(j);
-                var stringPair = new AbstractMap.SimpleEntry<>(is, js);
-                Assertions.assertEquals(concat.apply(is, js), concatCurry.apply(stringPair));
+                Assertions.assertEquals(concat.apply(is, js), concatCurry.apply(is).apply(js));
             }
         }
     }
@@ -145,7 +142,7 @@ public class FunctionalTest {
         Assertions.assertFalse(falsePredicate.apply(100100));
     }
 
-    <ReturnType> List<ReturnType> IteratorToList(Iterable<ReturnType> iterable) {
+    private <ReturnType> List<ReturnType> IteratorToList(Iterable<ReturnType> iterable) {
         return StreamSupport.stream(iterable.spliterator(), false).collect(Collectors.toList());
     }
 

@@ -14,7 +14,7 @@ public interface Predicate<ArgType> extends Function1<Boolean, ArgType> {
         return arg -> !this.apply(arg);
     }
 
-     class ALWAYS_TRUE implements Predicate<Object> {
+    class ALWAYS_TRUE implements Predicate<Object> {
         @Override
         public Boolean apply(Object arg) {
             return true;
