@@ -3,6 +3,9 @@ package ru.itmo.mit.util;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.AbstractMap;
+import java.util.Set;
+
 @SuppressWarnings({"ConstantValue", "SameParameterValue"})
 public class DictionaryImplTests {
 
@@ -74,7 +77,33 @@ public class DictionaryImplTests {
         addWithAssertions(d, null, null);
         Assertions.assertTrue(d.containsValue(null));
         Assertions.assertTrue(d.containsKey(null));
+    }
 
+    @Test
+    public void dictionarySetsTest() {
+        var d = new DictionaryImpl<Integer, String>();
+        Assertions.assertEquals(0, d.size());
+        Assertions.assertTrue(d.isEmpty());
+
+        addWithAssertions(d, 1, "hello");
+        addWithAssertions(d, 2, "world");
+        addWithAssertions(d, 3, "this");
+        addWithAssertions(d, 4, "is");
+        addWithAssertions(d, 5, "test");
+
+        var values =d.values();
+        var entries = d.entrySet();
+        var keys = d.keySet();
+
+        Assertions.assertEquals(Set.of(1,2,3,4,5), keys);
+        Assertions.assertEquals(Set.of("hello","world","this","is","test"), Set.copyOf(values));
+        Assertions.assertEquals(Set.of(
+                new AbstractMap.SimpleEntry<>(1,"hello"),
+                new AbstractMap.SimpleEntry<>(2,"world"),
+                new AbstractMap.SimpleEntry<>(3,"this"),
+                new AbstractMap.SimpleEntry<>(4,"is"),
+                new AbstractMap.SimpleEntry<>(5,"test")
+        ), entries);
     }
 
     private <K, V> void addWithAssertions(Dictionary<K, V> dict, K key, V value) {

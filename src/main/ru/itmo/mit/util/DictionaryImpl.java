@@ -152,7 +152,8 @@ public class DictionaryImpl<K, V> implements Dictionary<K, V> {
 
     @Override
     public V remove(Object key) {
-        var bucket = buckets.get(getBucketIdx(key));
+        var bucketIdx = getBucketIdx(key);
+        var bucket = buckets.get(bucketIdx);
         if (bucket == null) {
             return null;
         }
@@ -160,6 +161,9 @@ public class DictionaryImpl<K, V> implements Dictionary<K, V> {
             if (Objects.equals(entry.getKey(), key)) {
                 var oldValue = entry.getValue();
                 bucket.remove(entry);
+                if(bucket.isEmpty()){
+                    buckets.set(bucketIdx, null);
+                }
                 elementCount--;
                 rehashIfNeeded();
                 return oldValue;
@@ -221,6 +225,7 @@ public class DictionaryImpl<K, V> implements Dictionary<K, V> {
                     private ArrayList<Entry<K, V>> currentBucket = null;
                     private ArrayList<Entry<K, V>> nextBucket = null;
                     private int c = 0;
+                    private boolean removed=false;
 
                     {
                         while (bucketIterator.hasNext()) {
@@ -236,7 +241,7 @@ public class DictionaryImpl<K, V> implements Dictionary<K, V> {
 
                     @Override
                     public boolean hasNext() {
-                        return nextBucket != null || (currentBucket != null && c < currentBucket.size());
+                        return nextBucket != null || (currentBucket != null && c < currentBucket.size()-1);
                     }
 
                     @Override
@@ -244,10 +249,11 @@ public class DictionaryImpl<K, V> implements Dictionary<K, V> {
                         if (currentBucket == null) {
                             throw new NoSuchElementException();
                         }
+                        removed=false;
                         if (c < currentBucket.size()) {
                             c++;
                         } else {
-                            c = 0;
+                            c = 1;
                             currentBucket = nextBucket;
                             nextBucket = null;
                             while (bucketIterator.hasNext()) {
@@ -255,7 +261,17 @@ public class DictionaryImpl<K, V> implements Dictionary<K, V> {
                                 if (nextBucket != null) break;
                             }
                         }
-                        return currentBucket.get(c);
+                        return currentBucket.get(c-1);
+                    }
+
+                    @Override
+                    public void remove() {
+                        if(removed || currentBucket==null){
+                            throw new IllegalStateException();
+                        }
+                        removed=true;
+                        DictionaryImpl.this.remove(currentBucket.get(c));
+                        if(c>0) c--;
                     }
                 };
             }
