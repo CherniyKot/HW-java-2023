@@ -46,6 +46,7 @@ public class DictionaryImpl<K, V> implements Dictionary<K, V> {
             buckets = newBuckets;
             return;
         }
+        bucketCount = newBucketCount;
 
         for (var oldBucket : buckets) {
             if (oldBucket == null) continue;

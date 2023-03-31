@@ -1,15 +1,17 @@
 package ru.itmo.mit.util;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.RepetitionInfo;
 import org.junit.jupiter.api.Test;
 
-import java.util.AbstractMap;
-import java.util.Set;
+import java.util.*;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SuppressWarnings("ALL")
 public class DictionaryImplTests {
 
-    @SuppressWarnings("unused")
     @Test
     public void dictionaryCreateTest() {
         var d1 = new DictionaryImpl<Integer, Integer>();
@@ -21,7 +23,7 @@ public class DictionaryImplTests {
     @Test
     public void dictionaryBasicTest() {
         var d = new DictionaryImpl<Integer, String>();
-        Assertions.assertEquals(0, d.size());
+        assertEquals(0, d.size());
         Assertions.assertTrue(d.isEmpty());
 
         addWithAssertions(d, 10, "Hello");
@@ -45,9 +47,9 @@ public class DictionaryImplTests {
         Assertions.assertFalse(d.containsValue("Wow, that's a big number!"));
         Assertions.assertTrue(d.containsValue(""));
 
-        Assertions.assertEquals("World", d.get(12));
+        assertEquals("World", d.get(12));
         d.clear();
-        Assertions.assertEquals(0, d.size());
+        assertEquals(0, d.size());
         Assertions.assertTrue(d.isEmpty());
     }
 
@@ -82,7 +84,7 @@ public class DictionaryImplTests {
     @Test
     public void dictionarySetsTest() {
         var d = new DictionaryImpl<Integer, String>();
-        Assertions.assertEquals(0, d.size());
+        assertEquals(0, d.size());
         Assertions.assertTrue(d.isEmpty());
 
         addWithAssertions(d, 1, "hello");
@@ -95,9 +97,9 @@ public class DictionaryImplTests {
         var entries = d.entrySet();
         var keys = d.keySet();
 
-        Assertions.assertEquals(Set.of(1, 2, 3, 4, 5), keys);
-        Assertions.assertEquals(Set.of("hello", "world", "this", "is", "test"), Set.copyOf(values));
-        Assertions.assertEquals(Set.of(
+        assertEquals(Set.of(1, 2, 3, 4, 5), keys);
+        assertEquals(Set.of("hello", "world", "this", "is", "test"), Set.copyOf(values));
+        assertEquals(Set.of(
                 new AbstractMap.SimpleEntry<>(1, "hello"),
                 new AbstractMap.SimpleEntry<>(2, "world"),
                 new AbstractMap.SimpleEntry<>(3, "this"),
@@ -109,7 +111,7 @@ public class DictionaryImplTests {
     @Test
     public void entriesIteratorRemoveTest() {
         var d = new DictionaryImpl<Integer, String>();
-        Assertions.assertEquals(0, d.size());
+        assertEquals(0, d.size());
         Assertions.assertTrue(d.isEmpty());
 
         addWithAssertions(d, 1, "hello");
@@ -131,7 +133,7 @@ public class DictionaryImplTests {
                 new AbstractMap.SimpleEntry<>(4, "is"),
                 new AbstractMap.SimpleEntry<>(5, "test")));
 
-        Assertions.assertEquals(initialEntries, entries);
+        assertEquals(initialEntries, entries);
 
         var entriesIt = entries.iterator();
 
@@ -147,9 +149,9 @@ public class DictionaryImplTests {
         initialValues.remove("this");
         initialEntries.remove(new AbstractMap.SimpleEntry<>(3, "this"));
 
-        Assertions.assertEquals(initialKeys, keys);
-        Assertions.assertEquals(initialValues, Set.copyOf(values));
-        Assertions.assertEquals(initialEntries, entries);
+        assertEquals(initialKeys, keys);
+        assertEquals(initialValues, Set.copyOf(values));
+        assertEquals(initialEntries, entries);
 
 
         Assertions.assertThrows(IllegalStateException.class, entriesIt::remove);
@@ -161,15 +163,15 @@ public class DictionaryImplTests {
 
         Assertions.assertDoesNotThrow(entriesIt::remove);
 
-        Assertions.assertEquals(initialKeys, keys);
-        Assertions.assertEquals(initialValues, Set.copyOf(values));
-        Assertions.assertEquals(initialEntries, entries);
+        assertEquals(initialKeys, keys);
+        assertEquals(initialValues, Set.copyOf(values));
+        assertEquals(initialEntries, entries);
     }
 
     @Test
     public void keysIteratorRemoveTest() {
         var d = new DictionaryImpl<Integer, String>();
-        Assertions.assertEquals(0, d.size());
+        assertEquals(0, d.size());
         Assertions.assertTrue(d.isEmpty());
 
         addWithAssertions(d, 1, "hello");
@@ -191,7 +193,7 @@ public class DictionaryImplTests {
                 new AbstractMap.SimpleEntry<>(4, "is"),
                 new AbstractMap.SimpleEntry<>(5, "test")));
 
-        Assertions.assertEquals(initialEntries, entries);
+        assertEquals(initialEntries, entries);
 
         var keysIt = keys.iterator();
 
@@ -207,9 +209,9 @@ public class DictionaryImplTests {
         initialValues.remove("this");
         initialEntries.remove(new AbstractMap.SimpleEntry<>(3, "this"));
 
-        Assertions.assertEquals(initialKeys, keys);
-        Assertions.assertEquals(initialValues, Set.copyOf(values));
-        Assertions.assertEquals(initialEntries, entries);
+        assertEquals(initialKeys, keys);
+        assertEquals(initialValues, Set.copyOf(values));
+        assertEquals(initialEntries, entries);
 
 
         Assertions.assertThrows(IllegalStateException.class, keysIt::remove);
@@ -222,16 +224,16 @@ public class DictionaryImplTests {
 
         Assertions.assertDoesNotThrow(keysIt::remove);
 
-        Assertions.assertEquals(initialKeys, keys);
-        Assertions.assertEquals(initialValues, Set.copyOf(values));
-        Assertions.assertEquals(initialEntries, entries);
+        assertEquals(initialKeys, keys);
+        assertEquals(initialValues, Set.copyOf(values));
+        assertEquals(initialEntries, entries);
     }
 
     @SuppressWarnings("OptionalGetWithoutIsPresent")
     @Test
     public void valuesIteratorRemoveTest() {
         var d = new DictionaryImpl<Integer, String>();
-        Assertions.assertEquals(0, d.size());
+        assertEquals(0, d.size());
         Assertions.assertTrue(d.isEmpty());
 
         addWithAssertions(d, 1, "hello");
@@ -253,7 +255,7 @@ public class DictionaryImplTests {
                 new AbstractMap.SimpleEntry<>(4, "is"),
                 new AbstractMap.SimpleEntry<>(5, "test")));
 
-        Assertions.assertEquals(initialEntries, entries);
+        assertEquals(initialEntries, entries);
 
         var valuesIt = values.iterator();
 
@@ -269,9 +271,9 @@ public class DictionaryImplTests {
         initialValues.remove("this");
         initialEntries.remove(new AbstractMap.SimpleEntry<>(3, "this"));
 
-        Assertions.assertEquals(initialKeys, keys);
-        Assertions.assertEquals(initialValues, Set.copyOf(values));
-        Assertions.assertEquals(initialEntries, entries);
+        assertEquals(initialKeys, keys);
+        assertEquals(initialValues, Set.copyOf(values));
+        assertEquals(initialEntries, entries);
 
 
         Assertions.assertThrows(IllegalStateException.class, valuesIt::remove);
@@ -284,32 +286,62 @@ public class DictionaryImplTests {
 
         Assertions.assertDoesNotThrow(valuesIt::remove);
 
-        Assertions.assertEquals(initialKeys, keys);
-        Assertions.assertEquals(initialValues, Set.copyOf(values));
-        Assertions.assertEquals(initialEntries, entries);
+        assertEquals(initialKeys, keys);
+        assertEquals(initialValues, Set.copyOf(values));
+        assertEquals(initialEntries, entries);
+    }
+
+    @RepeatedTest(value = 6, name = RepeatedTest.LONG_DISPLAY_NAME)
+    public void stressTest(RepetitionInfo repetitionInfo) {
+        int testValue = (int) Math.pow(10, repetitionInfo.getCurrentRepetition());
+
+        var map = new HashMap<Integer, Integer>();
+        var dict = new DictionaryImpl<Integer, Integer>();
+        var rand = new Random();
+        var keySet = new HashSet<Integer>();
+
+        for (int i = 0; i < testValue / 10; i++) {
+            keySet.add(rand.nextInt());
+        }
+        var keys = keySet.toArray(new Integer[0]);
+
+        for (int i = 0; i < testValue; i++) {
+            int op = rand.nextInt(5);
+            int val = rand.nextInt(testValue);
+            var key = keys[rand.nextInt(keys.length)];
+            switch (op) {
+                case 0 -> assertEquals(map.put(key, val), dict.put(key, val));
+                case 1 -> assertEquals(map.remove(key), dict.remove(key));
+                case 2 -> assertEquals(map.containsKey(key), dict.containsKey(key));
+                case 3 -> assertEquals(map.size(), dict.size());
+                case 4 -> {
+                    if (testValue < 1e6) assertEquals(map.containsValue(val), dict.containsValue(val));
+                }
+            }
+        }
     }
 
     private <K, V> void addWithAssertions(Dictionary<K, V> dict, K key, V value) {
         var size = dict.size();
         Assertions.assertNull(dict.put(key, value));
-        Assertions.assertEquals(size + 1, dict.size());
+        assertEquals(size + 1, dict.size());
     }
 
     private <K, V> void changeWithAssertions(Dictionary<K, V> dict, V prev, K key, V value) {
         var size = dict.size();
-        Assertions.assertEquals(prev, dict.put(key, value));
-        Assertions.assertEquals(size, dict.size());
+        assertEquals(prev, dict.put(key, value));
+        assertEquals(size, dict.size());
     }
 
     private <K, V> void deleteWithAssertions(Dictionary<K, V> dict, V prev, K key) {
         var size = dict.size();
-        Assertions.assertEquals(prev, dict.remove(key));
-        Assertions.assertEquals(size - 1, dict.size());
+        assertEquals(prev, dict.remove(key));
+        assertEquals(size - 1, dict.size());
     }
 
     private <K, V> void deleteNonExistingWithAssertions(Dictionary<K, V> dict, K key) {
         var size = dict.size();
         Assertions.assertNull(dict.remove(key));
-        Assertions.assertEquals(size, dict.size());
+        assertEquals(size, dict.size());
     }
 }
