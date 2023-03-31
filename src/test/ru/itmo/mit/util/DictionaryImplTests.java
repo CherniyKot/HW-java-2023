@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.util.AbstractMap;
 import java.util.Set;
 
-@SuppressWarnings({"ConstantValue", "SameParameterValue"})
+@SuppressWarnings("ALL")
 public class DictionaryImplTests {
 
     @SuppressWarnings("unused")
@@ -59,7 +59,7 @@ public class DictionaryImplTests {
         Assertions.assertTrue(d.containsKey(null));
         Assertions.assertTrue(d.containsValue("Help"));
 
-        changeWithAssertions(d,"Help", null, "Ok, I'm helping");
+        changeWithAssertions(d, "Help", null, "Ok, I'm helping");
         Assertions.assertTrue(d.containsKey(null));
         Assertions.assertTrue(d.containsValue("Ok, I'm helping"));
         Assertions.assertFalse(d.containsValue("Help"));
@@ -91,19 +91,202 @@ public class DictionaryImplTests {
         addWithAssertions(d, 4, "is");
         addWithAssertions(d, 5, "test");
 
-        var values =d.values();
+        var values = d.values();
         var entries = d.entrySet();
         var keys = d.keySet();
 
-        Assertions.assertEquals(Set.of(1,2,3,4,5), keys);
-        Assertions.assertEquals(Set.of("hello","world","this","is","test"), Set.copyOf(values));
+        Assertions.assertEquals(Set.of(1, 2, 3, 4, 5), keys);
+        Assertions.assertEquals(Set.of("hello", "world", "this", "is", "test"), Set.copyOf(values));
         Assertions.assertEquals(Set.of(
-                new AbstractMap.SimpleEntry<>(1,"hello"),
-                new AbstractMap.SimpleEntry<>(2,"world"),
-                new AbstractMap.SimpleEntry<>(3,"this"),
-                new AbstractMap.SimpleEntry<>(4,"is"),
-                new AbstractMap.SimpleEntry<>(5,"test")
+                new AbstractMap.SimpleEntry<>(1, "hello"),
+                new AbstractMap.SimpleEntry<>(2, "world"),
+                new AbstractMap.SimpleEntry<>(3, "this"),
+                new AbstractMap.SimpleEntry<>(4, "is"),
+                new AbstractMap.SimpleEntry<>(5, "test")
         ), entries);
+    }
+
+    @Test
+    public void entriesIteratorRemoveTest() {
+        var d = new DictionaryImpl<Integer, String>();
+        Assertions.assertEquals(0, d.size());
+        Assertions.assertTrue(d.isEmpty());
+
+        addWithAssertions(d, 1, "hello");
+        addWithAssertions(d, 2, "world");
+        addWithAssertions(d, 3, "this");
+        addWithAssertions(d, 4, "is");
+        addWithAssertions(d, 5, "test");
+
+        var values = d.values();
+        var entries = d.entrySet();
+        var keys = d.keySet();
+
+        var initialKeys = new java.util.HashSet<>(Set.of(1, 2, 3, 4, 5));
+        var initialValues = new java.util.HashSet<>(Set.of("hello", "world", "this", "is", "test"));
+        var initialEntries = new java.util.HashSet<>(Set.of(
+                new AbstractMap.SimpleEntry<>(1, "hello"),
+                new AbstractMap.SimpleEntry<>(2, "world"),
+                new AbstractMap.SimpleEntry<>(3, "this"),
+                new AbstractMap.SimpleEntry<>(4, "is"),
+                new AbstractMap.SimpleEntry<>(5, "test")));
+
+        Assertions.assertEquals(initialEntries, entries);
+
+        var entriesIt = entries.iterator();
+
+        while (true) {
+            var t = entriesIt.next();
+            if (t.getKey() == 3) {
+                entriesIt.remove();
+                break;
+            }
+        }
+
+        initialKeys.remove(3);
+        initialValues.remove("this");
+        initialEntries.remove(new AbstractMap.SimpleEntry<>(3, "this"));
+
+        Assertions.assertEquals(initialKeys, keys);
+        Assertions.assertEquals(initialValues, Set.copyOf(values));
+        Assertions.assertEquals(initialEntries, entries);
+
+
+        Assertions.assertThrows(IllegalStateException.class, entriesIt::remove);
+
+        var t = entriesIt.next();
+        initialKeys.remove(t.getKey());
+        initialValues.remove(t.getValue());
+        initialEntries.remove(t);
+
+        Assertions.assertDoesNotThrow(entriesIt::remove);
+
+        Assertions.assertEquals(initialKeys, keys);
+        Assertions.assertEquals(initialValues, Set.copyOf(values));
+        Assertions.assertEquals(initialEntries, entries);
+    }
+
+    @Test
+    public void keysIteratorRemoveTest() {
+        var d = new DictionaryImpl<Integer, String>();
+        Assertions.assertEquals(0, d.size());
+        Assertions.assertTrue(d.isEmpty());
+
+        addWithAssertions(d, 1, "hello");
+        addWithAssertions(d, 2, "world");
+        addWithAssertions(d, 3, "this");
+        addWithAssertions(d, 4, "is");
+        addWithAssertions(d, 5, "test");
+
+        var values = d.values();
+        var entries = d.entrySet();
+        var keys = d.keySet();
+
+        var initialKeys = new java.util.HashSet<>(Set.of(1, 2, 3, 4, 5));
+        var initialValues = new java.util.HashSet<>(Set.of("hello", "world", "this", "is", "test"));
+        var initialEntries = new java.util.HashSet<>(Set.of(
+                new AbstractMap.SimpleEntry<>(1, "hello"),
+                new AbstractMap.SimpleEntry<>(2, "world"),
+                new AbstractMap.SimpleEntry<>(3, "this"),
+                new AbstractMap.SimpleEntry<>(4, "is"),
+                new AbstractMap.SimpleEntry<>(5, "test")));
+
+        Assertions.assertEquals(initialEntries, entries);
+
+        var keysIt = keys.iterator();
+
+        while (true) {
+            var t = keysIt.next();
+            if (t == 3) {
+                keysIt.remove();
+                break;
+            }
+        }
+
+        initialKeys.remove(3);
+        initialValues.remove("this");
+        initialEntries.remove(new AbstractMap.SimpleEntry<>(3, "this"));
+
+        Assertions.assertEquals(initialKeys, keys);
+        Assertions.assertEquals(initialValues, Set.copyOf(values));
+        Assertions.assertEquals(initialEntries, entries);
+
+
+        Assertions.assertThrows(IllegalStateException.class, keysIt::remove);
+
+        var k = keysIt.next();
+        var v = d.get(k);
+        initialKeys.remove(k);
+        initialValues.remove(v);
+        initialEntries.remove(new AbstractMap.SimpleEntry<>(k, v));
+
+        Assertions.assertDoesNotThrow(keysIt::remove);
+
+        Assertions.assertEquals(initialKeys, keys);
+        Assertions.assertEquals(initialValues, Set.copyOf(values));
+        Assertions.assertEquals(initialEntries, entries);
+    }
+
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
+    @Test
+    public void valuesIteratorRemoveTest() {
+        var d = new DictionaryImpl<Integer, String>();
+        Assertions.assertEquals(0, d.size());
+        Assertions.assertTrue(d.isEmpty());
+
+        addWithAssertions(d, 1, "hello");
+        addWithAssertions(d, 2, "world");
+        addWithAssertions(d, 3, "this");
+        addWithAssertions(d, 4, "is");
+        addWithAssertions(d, 5, "test");
+
+        var values = d.values();
+        var entries = d.entrySet();
+        var keys = d.keySet();
+
+        var initialKeys = new java.util.HashSet<>(Set.of(1, 2, 3, 4, 5));
+        var initialValues = new java.util.HashSet<>(Set.of("hello", "world", "this", "is", "test"));
+        var initialEntries = new java.util.HashSet<>(Set.of(
+                new AbstractMap.SimpleEntry<>(1, "hello"),
+                new AbstractMap.SimpleEntry<>(2, "world"),
+                new AbstractMap.SimpleEntry<>(3, "this"),
+                new AbstractMap.SimpleEntry<>(4, "is"),
+                new AbstractMap.SimpleEntry<>(5, "test")));
+
+        Assertions.assertEquals(initialEntries, entries);
+
+        var valuesIt = values.iterator();
+
+        while (true) {
+            var t = valuesIt.next();
+            if (t.equals("this")) {
+                valuesIt.remove();
+                break;
+            }
+        }
+
+        initialKeys.remove(3);
+        initialValues.remove("this");
+        initialEntries.remove(new AbstractMap.SimpleEntry<>(3, "this"));
+
+        Assertions.assertEquals(initialKeys, keys);
+        Assertions.assertEquals(initialValues, Set.copyOf(values));
+        Assertions.assertEquals(initialEntries, entries);
+
+
+        Assertions.assertThrows(IllegalStateException.class, valuesIt::remove);
+
+        var v = valuesIt.next();
+        var e = entries.stream().filter(x -> x.getValue().equals(v)).findFirst().get();
+        initialKeys.remove(e.getKey());
+        initialValues.remove(v);
+        initialEntries.remove(e);
+
+        Assertions.assertDoesNotThrow(valuesIt::remove);
+
+        Assertions.assertEquals(initialKeys, keys);
+        Assertions.assertEquals(initialValues, Set.copyOf(values));
+        Assertions.assertEquals(initialEntries, entries);
     }
 
     private <K, V> void addWithAssertions(Dictionary<K, V> dict, K key, V value) {

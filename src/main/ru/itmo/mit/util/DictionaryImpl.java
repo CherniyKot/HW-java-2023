@@ -6,35 +6,34 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@SuppressWarnings("SimplifyStreamApiCallChains")
 public class DictionaryImpl<K, V> implements Dictionary<K, V> {
 
-    public final double DEFAULT_LOAD_FACTOR = 0.7;
+    private final double DEFAULT_LOAD_FACTOR = 0.7;
     private double loadFactor = DEFAULT_LOAD_FACTOR;
     private int elementCount = 0;
 
-    public final int DEFAULT_BUCKET_COUNT = 256;
+    private final int DEFAULT_BUCKET_COUNT = 256;
     private int initialBucketCount = DEFAULT_BUCKET_COUNT;
     private int bucketCount = DEFAULT_BUCKET_COUNT;
 
-    private List<ArrayList<Entry<K, V>>> buckets;
+    private List<List<Entry<K, V>>> buckets;
 
-    DictionaryImpl() {
+    public DictionaryImpl() {
         rehash(bucketCount);
     }
 
-    DictionaryImpl(double loadFactor) {
+    public DictionaryImpl(double loadFactor) {
         this.loadFactor = loadFactor;
         rehash(bucketCount);
     }
 
-    DictionaryImpl(int bucketCount) {
+    public DictionaryImpl(int bucketCount) {
         this.bucketCount = bucketCount;
         initialBucketCount = bucketCount;
         rehash(bucketCount);
     }
 
-    DictionaryImpl(double loadFactor, int bucketCount) {
+    public DictionaryImpl(double loadFactor, int bucketCount) {
         this.loadFactor = loadFactor;
         this.bucketCount = bucketCount;
         initialBucketCount = bucketCount;
@@ -42,7 +41,7 @@ public class DictionaryImpl<K, V> implements Dictionary<K, V> {
     }
 
     private void rehash(int newBucketCount) {
-        var newBuckets = Stream.generate(() -> (ArrayList<Entry<K, V>>) null).limit(newBucketCount).collect(Collectors.toList());
+        var newBuckets = Stream.generate(() -> (List<Entry<K, V>>) null).limit(newBucketCount).collect(Collectors.toList());
         if (buckets == null) {
             buckets = newBuckets;
             return;
@@ -161,7 +160,7 @@ public class DictionaryImpl<K, V> implements Dictionary<K, V> {
             if (Objects.equals(entry.getKey(), key)) {
                 var oldValue = entry.getValue();
                 bucket.remove(entry);
-                if(bucket.isEmpty()){
+                if (bucket.isEmpty()) {
                     buckets.set(bucketIdx, null);
                 }
                 elementCount--;
@@ -189,7 +188,25 @@ public class DictionaryImpl<K, V> implements Dictionary<K, V> {
         return new AbstractSet<>() {
             @Override
             public Iterator<K> iterator() {
-                return entrySet().stream().map(Entry::getKey).iterator();
+                return new Iterator<>() {
+                    private final Iterator<Entry<K, V>> internalIterator = entrySet().iterator();
+
+                    @Override
+                    public boolean hasNext() {
+                        return internalIterator.hasNext();
+                    }
+
+                    @Override
+                    public K next() {
+                        var t = internalIterator.next();
+                        return t.getKey();
+                    }
+
+                    @Override
+                    public void remove() {
+                        internalIterator.remove();
+                    }
+                };
             }
 
             @Override
@@ -204,7 +221,25 @@ public class DictionaryImpl<K, V> implements Dictionary<K, V> {
         return new AbstractCollection<>() {
             @Override
             public Iterator<V> iterator() {
-                return entrySet().stream().map(Entry::getValue).iterator();
+                return new Iterator<>() {
+                    private final Iterator<Entry<K, V>> internalIterator = entrySet().iterator();
+
+                    @Override
+                    public boolean hasNext() {
+                        return internalIterator.hasNext();
+                    }
+
+                    @Override
+                    public V next() {
+                        var t = internalIterator.next();
+                        return t.getValue();
+                    }
+
+                    @Override
+                    public void remove() {
+                        internalIterator.remove();
+                    }
+                };
             }
 
             @Override
@@ -221,11 +256,11 @@ public class DictionaryImpl<K, V> implements Dictionary<K, V> {
             public Iterator<Entry<K, V>> iterator() {
                 return new Iterator<>() {
 
-                    private final Iterator<ArrayList<Entry<K, V>>> bucketIterator = buckets.iterator();
-                    private ArrayList<Entry<K, V>> currentBucket = null;
-                    private ArrayList<Entry<K, V>> nextBucket = null;
+                    private final Iterator<List<Entry<K, V>>> bucketIterator = buckets.iterator();
+                    private List<Entry<K, V>> currentBucket = null;
+                    private List<Entry<K, V>> nextBucket = null;
                     private int c = 0;
-                    private boolean removed=false;
+                    private boolean removed = false;
 
                     {
                         while (bucketIterator.hasNext()) {
@@ -241,7 +276,7 @@ public class DictionaryImpl<K, V> implements Dictionary<K, V> {
 
                     @Override
                     public boolean hasNext() {
-                        return nextBucket != null || (currentBucket != null && c < currentBucket.size()-1);
+                        return nextBucket != null || (currentBucket != null && c < currentBucket.size() - 1);
                     }
 
                     @Override
@@ -249,7 +284,7 @@ public class DictionaryImpl<K, V> implements Dictionary<K, V> {
                         if (currentBucket == null) {
                             throw new NoSuchElementException();
                         }
-                        removed=false;
+                        removed = false;
                         if (c < currentBucket.size()) {
                             c++;
                         } else {
@@ -261,17 +296,17 @@ public class DictionaryImpl<K, V> implements Dictionary<K, V> {
                                 if (nextBucket != null) break;
                             }
                         }
-                        return currentBucket.get(c-1);
+                        return currentBucket.get(c - 1);
                     }
 
                     @Override
                     public void remove() {
-                        if(removed || currentBucket==null){
+                        if (removed || currentBucket == null) {
                             throw new IllegalStateException();
                         }
-                        removed=true;
-                        DictionaryImpl.this.remove(currentBucket.get(c));
-                        if(c>0) c--;
+                        removed = true;
+                        DictionaryImpl.this.remove(currentBucket.get(c - 1).getKey());
+                        if (c > 0) c--;
                     }
                 };
             }
