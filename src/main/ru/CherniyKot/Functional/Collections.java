@@ -5,8 +5,10 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+@SuppressWarnings("SameParameterValue")
 public class Collections {
-    static <ReturnType, ArgType> Iterable<ReturnType> map(Function1<ReturnType, ArgType> func, Iterable<ArgType> iterable) {
+    @NotNull
+    static <ReturnType, ArgType> Iterable<ReturnType> map(@NotNull Function1<ReturnType, ? super ArgType> func, @NotNull Iterable<ArgType> iterable) {
         return new Iterable<>() {
             private final Iterator<ArgType> internalIterator = iterable.iterator();
 
@@ -28,7 +30,8 @@ public class Collections {
         };
     }
 
-    static <ArgType> Iterable<ArgType> filter(Predicate<ArgType> pred, Iterable<ArgType> iterable) {
+    @NotNull
+    static <ArgType> Iterable<ArgType> filter(@NotNull Predicate<? super ArgType> pred, @NotNull Iterable<ArgType> iterable) {
         return new Iterable<>() {
             private final Iterator<ArgType> internalIterator = iterable.iterator();
 
@@ -74,7 +77,8 @@ public class Collections {
         };
     }
 
-    static <ArgType> Iterable<ArgType> takeWhile(Predicate<ArgType> pred, Iterable<ArgType> iterable) {
+    @NotNull
+    static <ArgType> Iterable<ArgType> takeWhile(@NotNull Predicate<? super ArgType> pred, @NotNull Iterable<ArgType> iterable) {
         return new Iterable<>() {
             private final Iterator<ArgType> internalIterator = iterable.iterator();
 
@@ -119,7 +123,8 @@ public class Collections {
         };
     }
 
-    static <ArgType> Iterable<ArgType> takeUnless(Predicate<ArgType> pred, Iterable<ArgType> iterable) {
+    @NotNull
+    static <ArgType> Iterable<ArgType> takeUnless(@NotNull Predicate<? super ArgType> pred, @NotNull Iterable<ArgType> iterable) {
         return new Iterable<>() {
             private final Iterator<ArgType> internalIterator = iterable.iterator();
 
@@ -164,7 +169,9 @@ public class Collections {
         };
     }
 
-    static <ReturnType, ArgType> ReturnType foldl(Function2<ReturnType, ReturnType, ArgType> func, ReturnType init, Iterable<ArgType> iterable) {
+    @NotNull
+    static <ReturnType, ArgType> ReturnType foldl(@NotNull Function2<? extends ReturnType, ? super ReturnType, ? super ArgType> func,
+                                                  ReturnType init, @NotNull Iterable<ArgType> iterable) {
         ReturnType result = init;
         for (ArgType arg : iterable) {
             result = func.apply(result, arg);
@@ -172,11 +179,13 @@ public class Collections {
         return result;
     }
 
-    static <ReturnType, ArgType> ReturnType foldr(Function2<ReturnType, ArgType, ReturnType> func, ReturnType init, Iterable<ArgType> iterable) {
+    static <ReturnType, ArgType> ReturnType foldr(@NotNull Function2<? extends ReturnType, ? super ArgType, ? super ReturnType> func,
+                                                  ReturnType init, @NotNull Iterable<ArgType> iterable) {
         return _foldr(func, init, iterable.iterator());
     }
 
-    private static <ReturnType, ArgType> ReturnType _foldr(Function2<ReturnType, ArgType, ReturnType> func, ReturnType init, Iterator<ArgType> iterator) {
+    private static <ReturnType, ArgType> ReturnType _foldr(@NotNull Function2<? extends ReturnType, ? super ArgType, ? super ReturnType> func,
+                                                           ReturnType init, @NotNull Iterator<ArgType> iterator) {
         if (!iterator.hasNext()) {
             return init;
         }

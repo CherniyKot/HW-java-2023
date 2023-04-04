@@ -1,15 +1,20 @@
 package ru.CherniyKot.Functional;
 
+import org.jetbrains.annotations.NotNull;
+
 @FunctionalInterface
 public interface Predicate<ArgType> extends Function1<Boolean, ArgType> {
-    default Predicate<ArgType> or(Predicate<ArgType> predicate) {
+    @NotNull
+    default Predicate<ArgType> or(@NotNull Predicate<? super ArgType> predicate) {
         return arg -> this.apply(arg) || predicate.apply(arg);
     }
 
-    default Predicate<ArgType> and(Predicate<ArgType> predicate) {
+    @NotNull
+    default Predicate<ArgType> and(@NotNull Predicate<? super ArgType> predicate) {
         return arg -> this.apply(arg) && predicate.apply(arg);
     }
 
+    @NotNull
     default Predicate<ArgType> not() {
         return arg -> !this.apply(arg);
     }

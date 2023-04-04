@@ -121,12 +121,24 @@ public class FunctionalTest {
             Assertions.assertEquals(i % 2 == 0 || i % 9 == 0, isDivisibleByNineOrEven.apply(i));
         }
 
+        var truePredicate = new Predicate.ALWAYS_TRUE();
+        var falsePredicate = new Predicate.ALWAYS_FALSE();
+
+        Assertions.assertTrue(truePredicate.apply("I'm definitely very false"));
+        Assertions.assertFalse(falsePredicate.apply(100100));
+
         var isEvenAndDivisibleByNine = isEven.and(isDivisibleByNine);
         var isDivisibleByNineAndEven = isDivisibleByNine.and(isEven);
+        var isEvenAndDivisibleByNine2 = isEvenAndDivisibleByNine.and(truePredicate);
+        var isDivisibleByNineAndEven2 = isDivisibleByNineAndEven.or(falsePredicate);
+
 
         for (int i = 0; i < 100; i++) {
             Assertions.assertEquals(i % 2 == 0 && i % 9 == 0, isEvenAndDivisibleByNine.apply(i));
             Assertions.assertEquals(i % 2 == 0 && i % 9 == 0, isDivisibleByNineAndEven.apply(i));
+
+            Assertions.assertEquals(i % 2 == 0 && i % 9 == 0, isEvenAndDivisibleByNine2.apply(i));
+            Assertions.assertEquals(i % 2 == 0 && i % 9 == 0, isDivisibleByNineAndEven2.apply(i));
         }
 
         var isOdd = isEven.not();
@@ -134,12 +146,6 @@ public class FunctionalTest {
         for (int i = 0; i < 100; i++) {
             Assertions.assertEquals(i % 2 == 1, isOdd.apply(i));
         }
-
-        var truePredicate = new Predicate.ALWAYS_TRUE();
-        var falsePredicate = new Predicate.ALWAYS_FALSE();
-
-        Assertions.assertTrue(truePredicate.apply("I'm definitely very false"));
-        Assertions.assertFalse(falsePredicate.apply(100100));
     }
 
     private <ReturnType> List<ReturnType> IteratorToList(Iterable<ReturnType> iterable) {
