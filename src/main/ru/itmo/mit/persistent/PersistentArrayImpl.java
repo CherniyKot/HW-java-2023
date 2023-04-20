@@ -23,9 +23,11 @@ public class PersistentArrayImpl<T> implements PersistentArray<T> {
         }
     }
 
-    private PersistentArrayImpl(PersistentArrayNode n, int size) {
-        this.size = size;
-        root = n;
+    protected PersistentArrayImpl<T> createNewVersion(PersistentArrayNode n, int size) {
+        var r = new PersistentArrayImpl<T>();
+        r.root=n;
+        r.size=size;
+        return r;
     }
 
     @Override
@@ -72,7 +74,7 @@ public class PersistentArrayImpl<T> implements PersistentArray<T> {
     }
 
     @Override
-    public PersistentArray<T> set(int index, @Nullable T x) {
+    public PersistentArrayImpl<T> set(int index, @Nullable T x) {
         var r = new PersistentArrayNode();
         var n = r;
         var node = root;
@@ -88,7 +90,7 @@ public class PersistentArrayImpl<T> implements PersistentArray<T> {
         if (node != null) {
             n.next = node.next;
         }
-        return new PersistentArrayImpl<>(r, Math.max(index, size));
+        return createNewVersion(r, Math.max(index, size));
     }
 
     @Override
@@ -103,13 +105,16 @@ public class PersistentArrayImpl<T> implements PersistentArray<T> {
 
             @Override
             public T next() {
+                if(!hasNext()){
+                    throw new NoSuchElementException();
+                }
                 node = node.next;
                 return node.value;
             }
         };
     }
 
-    private class PersistentArrayNode {
+    protected class PersistentArrayNode {
         PersistentArrayNode next;
         T value;
     }
