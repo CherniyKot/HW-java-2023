@@ -2,7 +2,10 @@ package ru.itmo.mit.persistent;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Iterator;
 
+
+@SuppressWarnings("unused")
 interface PersistentArray<T> {
     int getSize();
 
@@ -17,5 +20,5 @@ interface PersistentArray<T> {
      * Итератор по текущим значениям.
      * Реализация обхода ожидается без последовательных вызовов get(int)
      */
-    // Iterator<T> iterator();
+     Iterator<T> iterator();
 }
