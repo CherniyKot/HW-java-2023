@@ -1,8 +1,14 @@
 package ru.itmo.mit.persistent;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.Iterator;
 
+@SuppressWarnings("unused")
 public interface VersionedPersistentArray<T> extends PersistentArray<T> {
+    @Override
+    VersionedPersistentArray<T> set(int index, @Nullable T x);
+
     /*
      * Итератор по предыдущим состояниям.
      * Обход от текущего состояния по предыдущим.

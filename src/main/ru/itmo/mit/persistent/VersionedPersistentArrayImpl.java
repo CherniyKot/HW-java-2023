@@ -2,16 +2,16 @@ package ru.itmo.mit.persistent;
 
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Iterator;
-import java.util.NoSuchElementException;
+import java.io.*;
+import java.util.*;
 
 @SuppressWarnings("unused")
-public class VersionedPersistentArrayImpl<T> extends PersistentArrayImpl<T> implements VersionedPersistentArray<T> {
+public class VersionedPersistentArrayImpl<T extends Serializable> extends PersistentArrayImpl<T> implements VersionedPersistentArray<T> {
 
     private VersionedPersistentArrayImpl<T> previousVersion;
 
     @Override
-    protected VersionedPersistentArrayImpl<T> createNewVersion(PersistentArrayImpl<T>.PersistentArrayNode n, int size) {
+    protected VersionedPersistentArrayImpl<T> createNewVersion(PersistentArrayImpl.PersistentArrayNode<T> n, int size) {
         VersionedPersistentArrayImpl<T> r = (VersionedPersistentArrayImpl<T>) super.createNewVersion(n, size);
         r.previousVersion = this;
         return r;
@@ -20,6 +20,91 @@ public class VersionedPersistentArrayImpl<T> extends PersistentArrayImpl<T> impl
     @Override
     public VersionedPersistentArrayImpl<T> set(int index, @Nullable T x) {
         return (VersionedPersistentArrayImpl<T>) super.set(index, x);
+    }
+
+
+    @Override
+    public void serialize(OutputStream outputStream) {
+        Set<PersistentArrayNode<T>> nodes = new HashSet<>();
+        int numberOfVersions = -1;
+        var curr = this;
+        do {
+            var node = curr.root;
+            do {
+                nodes.add(node);
+                node = node.next;
+            } while (node != null);
+            curr = curr.previousVersion;
+            numberOfVersions++;
+        } while (curr != null);
+
+        try (var stream = new ObjectOutputStream(outputStream)) {
+            stream.writeInt(nodes.size());
+            for (var node : nodes) {
+                stream.writeInt(node.hashCode());
+                stream.writeInt(Objects.hashCode(node.next));
+                stream.writeObject(node.value);
+            }
+
+            stream.writeInt(numberOfVersions);
+            curr = this;
+            do {
+                stream.writeInt(curr.root.hashCode());
+                curr = curr.previousVersion;
+            } while (curr != null);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public PersistentArray<T> deserialize(InputStream inputStream) {
+        Map<Integer, PersistentArrayNode<T>> nodes = new HashMap<>();
+        Map<Integer, Integer> order = new HashMap<>();
+        PersistentArrayImpl<T> result=null;
+
+        try (var stream = new ObjectInputStream(inputStream)) {
+            int nodeCount = stream.readInt();
+            for (int i = 0; i < nodeCount; i++) {
+                var node = new PersistentArrayNode<T>();
+                int curr = stream.readInt();
+                int next = stream.readInt();
+                node.value = (T) stream.readObject();
+                nodes.put(curr, node);
+                order.put(curr, next);
+            }
+
+            var version = new VersionedPersistentArrayImpl<T>();
+            int numberOfVersions = stream.readInt();
+            for (int i = 0; i < numberOfVersions; i++) {
+                int rootId = stream.readInt();
+                var rootNode = nodes.get(rootId);
+                var currNode = rootNode;
+                int versionSize=0;
+                int currId=rootId;
+                do{
+                    currId=order.get(currId);
+                    currNode.next=nodes.get(currId);
+                    currNode=currNode.next;
+                    versionSize++;
+                }while(nodes.containsKey(currId));
+
+                version.size=versionSize;
+                version.root = rootNode;
+                if(result==null){
+                    result=version;
+                }
+                var prevVersion = version;
+                version = new VersionedPersistentArrayImpl<>();
+                prevVersion.previousVersion=version;
+            }
+
+        } catch (IOException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
+        return result;
     }
 
     @Override
