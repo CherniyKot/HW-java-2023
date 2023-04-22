@@ -5,7 +5,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Iterator;
 
 
-@SuppressWarnings("unused")
 interface PersistentArray<T> {
     int getSize();
 

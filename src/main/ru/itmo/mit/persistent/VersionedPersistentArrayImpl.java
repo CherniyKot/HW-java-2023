@@ -5,14 +5,16 @@ import org.jetbrains.annotations.Nullable;
 import java.io.*;
 import java.util.*;
 
-@SuppressWarnings("unused")
 public class VersionedPersistentArrayImpl<T extends Serializable> extends PersistentArrayImpl<T> implements VersionedPersistentArray<T> {
 
     private VersionedPersistentArrayImpl<T> previousVersion;
 
     @Override
     protected VersionedPersistentArrayImpl<T> createNewVersion(PersistentArrayImpl.PersistentArrayNode<T> n, int size) {
-        VersionedPersistentArrayImpl<T> r = (VersionedPersistentArrayImpl<T>) super.createNewVersion(n, size);
+        var newVersion = super.createNewVersion(n, size);
+        VersionedPersistentArrayImpl<T> r = new VersionedPersistentArrayImpl<>();
+        r.root = newVersion.root;
+        r.size = newVersion.size;
         r.previousVersion = this;
         return r;
     }
@@ -59,10 +61,10 @@ public class VersionedPersistentArrayImpl<T extends Serializable> extends Persis
 
     @SuppressWarnings("unchecked")
     @Override
-    public PersistentArray<T> deserialize(InputStream inputStream) {
+    public VersionedPersistentArray<T> deserialize(InputStream inputStream) {
         Map<Integer, PersistentArrayNode<T>> nodes = new HashMap<>();
         Map<Integer, Integer> order = new HashMap<>();
-        PersistentArrayImpl<T> result=null;
+        VersionedPersistentArrayImpl<T> result = null;
 
         try (var stream = new ObjectInputStream(inputStream)) {
             int nodeCount = stream.readInt();
@@ -81,23 +83,23 @@ public class VersionedPersistentArrayImpl<T extends Serializable> extends Persis
                 int rootId = stream.readInt();
                 var rootNode = nodes.get(rootId);
                 var currNode = rootNode;
-                int versionSize=0;
-                int currId=rootId;
-                do{
-                    currId=order.get(currId);
-                    currNode.next=nodes.get(currId);
-                    currNode=currNode.next;
+                int versionSize = -1;
+                int currId = rootId;
+                do {
+                    currId = order.get(currId);
+                    currNode.next = nodes.get(currId);
+                    currNode = currNode.next;
                     versionSize++;
-                }while(nodes.containsKey(currId));
+                } while (nodes.containsKey(currId));
 
-                version.size=versionSize;
+                version.size = versionSize;
                 version.root = rootNode;
-                if(result==null){
-                    result=version;
+                if (result == null) {
+                    result = version;
                 }
                 var prevVersion = version;
                 version = new VersionedPersistentArrayImpl<>();
-                prevVersion.previousVersion=version;
+                prevVersion.previousVersion = version;
             }
 
         } catch (IOException | ClassNotFoundException e) {
@@ -108,7 +110,7 @@ public class VersionedPersistentArrayImpl<T extends Serializable> extends Persis
     }
 
     @Override
-    public Iterator<PersistentArray<T>> versionsIterator() {
+    public Iterator<VersionedPersistentArray<T>> versionsIterator() {
         return new Iterator<>() {
             VersionedPersistentArrayImpl<T> curr = VersionedPersistentArrayImpl.this;
 
@@ -118,7 +120,7 @@ public class VersionedPersistentArrayImpl<T extends Serializable> extends Persis
             }
 
             @Override
-            public PersistentArray<T> next() {
+            public VersionedPersistentArray<T> next() {
                 if (!hasNext()) {
                     throw new NoSuchElementException();
                 }
@@ -130,9 +132,9 @@ public class VersionedPersistentArrayImpl<T extends Serializable> extends Persis
     }
 
     @Override
-    public PersistentArray<T> getPreviousVersion(int k) {
+    public VersionedPersistentArray<T> getPreviousVersion(int k) {
         var it = versionsIterator();
-        for (int i = 0; i < k - 1; i++) {
+        for (int i = 0; i < k; i++) {
             it.next();
         }
         return it.next();

@@ -7,10 +7,9 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
-@SuppressWarnings("unused")
 public class PersistentArrayImpl<T extends Serializable> implements PersistentArray<T>, SerializableArray<T> {
-    int size = 0;
-    PersistentArrayNode<T> root = new PersistentArrayNode<>();
+    protected int size = 0;
+    protected PersistentArrayNode<T> root = new PersistentArrayNode<>();
 
     public PersistentArrayImpl() {
     }
@@ -26,8 +25,8 @@ public class PersistentArrayImpl<T extends Serializable> implements PersistentAr
 
     protected PersistentArrayImpl<T> createNewVersion(PersistentArrayNode<T> n, int size) {
         var r = new PersistentArrayImpl<T>();
-        r.root=n;
-        r.size=size;
+        r.root = n;
+        r.size = size;
         return r;
     }
 
@@ -65,7 +64,7 @@ public class PersistentArrayImpl<T extends Serializable> implements PersistentAr
     @Override
     public @Nullable T get(int index) {
         var node = root;
-        for (int i = 0; i < index; i++) {
+        for (int i = 0; i < index + 1; i++) {
             node = node.next;
             if (node == null) {
                 return null;
@@ -79,19 +78,19 @@ public class PersistentArrayImpl<T extends Serializable> implements PersistentAr
         var r = new PersistentArrayNode<T>();
         var n = r;
         var node = root;
-        for (int i = 0; i < index; i++) {
-            n.next = new PersistentArrayNode<>();
+        for (int i = 0; i < index + 1; i++) {
             if (node != null) {
                 n.value = node.value;
                 node = node.next;
             }
+            n.next = new PersistentArrayNode<>();
             n = n.next;
         }
         n.value = x;
         if (node != null) {
             n.next = node.next;
         }
-        return createNewVersion(r, Math.max(index, size));
+        return createNewVersion(r, Math.max(index + 1, size));
     }
 
     @Override
@@ -106,7 +105,7 @@ public class PersistentArrayImpl<T extends Serializable> implements PersistentAr
 
             @Override
             public T next() {
-                if(!hasNext()){
+                if (!hasNext()) {
                     throw new NoSuchElementException();
                 }
                 node = node.next;
@@ -117,14 +116,12 @@ public class PersistentArrayImpl<T extends Serializable> implements PersistentAr
 
     @Override
     public void serialize(OutputStream outputStream) {
-        var node =root;
+        var node = root;
         try (ObjectOutputStream stream = new ObjectOutputStream(outputStream)) {
             stream.writeInt(size);
-            while(node!=null){
-                stream.writeInt(node.hashCode()); //for compatability with versioned one
-                stream.writeInt(Objects.hashCode(node.next));
+            while (node != null) {
                 stream.writeObject(node.value);
-                node=node.next;
+                node = node.next;
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -138,11 +135,9 @@ public class PersistentArrayImpl<T extends Serializable> implements PersistentAr
             int s = stream.readInt();
             var r = new PersistentArrayImpl<T>(s);
             var node = r.root;
-            for (int i = 0; i < s; i++) {
-                node=node.next;
-                stream.readInt();
-                stream.readInt();
-                node.value= (T) stream.readObject();
+            for (int i = 0; i < s + 1; i++) {
+                node.value = (T) stream.readObject();
+                node = node.next;
             }
             return r;
         } catch (IOException | ClassNotFoundException e) {
