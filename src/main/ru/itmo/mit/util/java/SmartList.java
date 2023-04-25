@@ -130,6 +130,7 @@ public class SmartList<T> extends AbstractList<T> implements List<T> {
             for (int i = index; i < size; i++) {
                 arr[i]=arr[i+1];
             }
+            arr[size]=null;
             return t;
         }
         if(size==SOO_SIZE){
