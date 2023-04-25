@@ -1,10 +1,13 @@
 package ru.itmo.mit.streams;
 
-import java.io.*;
-import java.util.*;
-import java.util.function.Supplier;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.util.AbstractMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public final class SecondPartTasks {
 
@@ -12,7 +15,7 @@ public final class SecondPartTasks {
     }
 
     // Найти строки из переданных файлов, в которых встречается указанная подстрока.
-    public static List<String> findQuotes(List<String> paths, CharSequence sequence) throws IOException {
+    public static List<String> findQuotes(List<String> paths, CharSequence sequence) {
         return paths.stream().map(name -> {
             try {
                 return new BufferedReader(new FileReader(name));
