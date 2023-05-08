@@ -28,12 +28,14 @@ public class VersionedPersistentArrayImpl<T extends Serializable> extends Persis
     @Override
     public void serialize(OutputStream outputStream) {
         Set<PersistentArrayNode<T>> nodes = new HashSet<>();
+        Map<Integer, T> values = new HashMap<>();
         int numberOfVersions = -1;
         var curr = this;
         do {
             var node = curr.root;
             do {
                 nodes.add(node);
+                values.put(Objects.hashCode(node.value), node.value);
                 node = node.next;
             } while (node != null);
             curr = curr.previousVersion;
@@ -41,11 +43,17 @@ public class VersionedPersistentArrayImpl<T extends Serializable> extends Persis
         } while (curr != null);
 
         try (var stream = new ObjectOutputStream(outputStream)) {
+            stream.writeInt(values.size());
+            for (var value : values.entrySet()) {
+                stream.writeInt(value.getKey());
+                stream.writeObject(value.getValue());
+            }
+
             stream.writeInt(nodes.size());
             for (var node : nodes) {
                 stream.writeInt(node.hashCode());
                 stream.writeInt(Objects.hashCode(node.next));
-                stream.writeObject(node.value);
+                stream.writeInt(Objects.hashCode(node.value));
             }
 
             stream.writeInt(numberOfVersions);
@@ -63,16 +71,25 @@ public class VersionedPersistentArrayImpl<T extends Serializable> extends Persis
     @Override
     public VersionedPersistentArray<T> deserialize(InputStream inputStream) {
         Map<Integer, PersistentArrayNode<T>> nodes = new HashMap<>();
+        Map<Integer, T> values = new HashMap<>();
         Map<Integer, Integer> order = new HashMap<>();
         VersionedPersistentArrayImpl<T> result = null;
 
         try (var stream = new ObjectInputStream(inputStream)) {
+            int valuesCount = stream.readInt();
+            for (int i = 0; i < valuesCount; i++) {
+                var hash = stream.readInt();
+                T value = (T) stream.readObject();
+                values.put(hash, value);
+            }
+
             int nodeCount = stream.readInt();
             for (int i = 0; i < nodeCount; i++) {
                 var node = new PersistentArrayNode<T>();
                 int curr = stream.readInt();
                 int next = stream.readInt();
-                node.value = (T) stream.readObject();
+                int valueHash = stream.readInt();
+                node.value = values.get(valueHash);
                 nodes.put(curr, node);
                 order.put(curr, next);
             }
