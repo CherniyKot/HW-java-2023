@@ -8,6 +8,7 @@ import java.util.*;
 public class VersionedPersistentArrayImpl<T extends Serializable> extends PersistentArrayImpl<T> implements VersionedPersistentArray<T> {
 
     private VersionedPersistentArrayImpl<T> previousVersion;
+    private int numberOfVersions = 0;
 
     @Override
     protected VersionedPersistentArrayImpl<T> createNewVersion(PersistentArrayImpl.PersistentArrayNode<T> n, int size) {
@@ -16,6 +17,7 @@ public class VersionedPersistentArrayImpl<T extends Serializable> extends Persis
         r.root = newVersion.root;
         r.size = newVersion.size;
         r.previousVersion = this;
+        r.numberOfVersions = this.numberOfVersions + 1;
         return r;
     }
 
@@ -24,44 +26,16 @@ public class VersionedPersistentArrayImpl<T extends Serializable> extends Persis
         return (VersionedPersistentArrayImpl<T>) super.set(index, x);
     }
 
-
     @Override
     public void serialize(OutputStream outputStream) {
-        Set<PersistentArrayNode<T>> nodes = new HashSet<>();
-        Map<Integer, T> values = new HashMap<>();
-        int numberOfVersions = -1;
-        var curr = this;
-        do {
-            var node = curr.root;
-            do {
-                nodes.add(node);
-                values.put(Objects.hashCode(node.value), node.value);
-                node = node.next;
-            } while (node != null);
-            curr = curr.previousVersion;
-            numberOfVersions++;
-        } while (curr != null);
 
         try (var stream = new ObjectOutputStream(outputStream)) {
-            stream.writeInt(values.size());
-            for (var value : values.entrySet()) {
-                stream.writeInt(value.getKey());
-                stream.writeObject(value.getValue());
+            var history = getHistory();
+            stream.writeInt(history.size());
+            for (var mod : history) {
+                stream.writeInt(mod.getPosition());
+                stream.writeObject(mod.getValue());
             }
-
-            stream.writeInt(nodes.size());
-            for (var node : nodes) {
-                stream.writeInt(node.hashCode());
-                stream.writeInt(Objects.hashCode(node.next));
-                stream.writeInt(Objects.hashCode(node.value));
-            }
-
-            stream.writeInt(numberOfVersions);
-            curr = this;
-            do {
-                stream.writeInt(curr.root.hashCode());
-                curr = curr.previousVersion;
-            } while (curr != null);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -70,57 +44,18 @@ public class VersionedPersistentArrayImpl<T extends Serializable> extends Persis
     @SuppressWarnings("unchecked")
     @Override
     public VersionedPersistentArray<T> deserialize(InputStream inputStream) {
-        Map<Integer, PersistentArrayNode<T>> nodes = new HashMap<>();
-        Map<Integer, T> values = new HashMap<>();
-        Map<Integer, Integer> order = new HashMap<>();
-        VersionedPersistentArrayImpl<T> result = null;
-
+        VersionedPersistentArrayImpl<T> result = new VersionedPersistentArrayImpl<>();
+        Deque<Modification<T>> history = new ArrayDeque<>();
         try (var stream = new ObjectInputStream(inputStream)) {
-            int valuesCount = stream.readInt();
-            for (int i = 0; i < valuesCount; i++) {
-                var hash = stream.readInt();
-                T value = (T) stream.readObject();
-                values.put(hash, value);
+            var size = stream.readInt();
+            for (int i = 0; i < size; i++) {
+                history.addFirst(new Modification<>(stream.readInt(), (T) stream.readObject()));
             }
-
-            int nodeCount = stream.readInt();
-            for (int i = 0; i < nodeCount; i++) {
-                var node = new PersistentArrayNode<T>();
-                int curr = stream.readInt();
-                int next = stream.readInt();
-                int valueHash = stream.readInt();
-                node.value = values.get(valueHash);
-                nodes.put(curr, node);
-                order.put(curr, next);
-            }
-
-            var version = new VersionedPersistentArrayImpl<T>();
-            int numberOfVersions = stream.readInt();
-            for (int i = 0; i < numberOfVersions; i++) {
-                int rootId = stream.readInt();
-                var rootNode = nodes.get(rootId);
-                var currNode = rootNode;
-                int versionSize = -1;
-                int currId = rootId;
-                do {
-                    currId = order.get(currId);
-                    currNode.next = nodes.get(currId);
-                    currNode = currNode.next;
-                    versionSize++;
-                } while (nodes.containsKey(currId));
-
-                version.size = versionSize;
-                version.root = rootNode;
-                if (result == null) {
-                    result = version;
-                }
-                var prevVersion = version;
-                version = new VersionedPersistentArrayImpl<>();
-                prevVersion.previousVersion = version;
-            }
-
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);
+        }
+        for (var mod : history) {
+            result = result.set(mod.getPosition(), mod.getValue());
         }
 
         return result;
@@ -129,7 +64,7 @@ public class VersionedPersistentArrayImpl<T extends Serializable> extends Persis
     @Override
     public Iterator<VersionedPersistentArray<T>> versionsIterator() {
         return new Iterator<>() {
-            VersionedPersistentArrayImpl<T> curr = VersionedPersistentArrayImpl.this;
+            private VersionedPersistentArrayImpl<T> curr = VersionedPersistentArrayImpl.this;
 
             @Override
             public boolean hasNext() {
@@ -155,5 +90,74 @@ public class VersionedPersistentArrayImpl<T extends Serializable> extends Persis
             it.next();
         }
         return it.next();
+    }
+
+    public static class Modification<T> {
+        private final int position;
+        private final T value;
+
+        public int getPosition() {
+            return position;
+        }
+
+        public T getValue() {
+            return value;
+        }
+
+        Modification(int position, T value) {
+            this.position = position;
+            this.value = value;
+        }
+    }
+
+    public Collection<Modification<T>> getHistory() {
+        return new AbstractCollection<>() {
+
+            private VersionedPersistentArrayImpl<T> curr = VersionedPersistentArrayImpl.this;
+
+            @Override
+            public Iterator<Modification<T>> iterator() {
+                return new Iterator<>() {
+                    @Override
+                    public boolean hasNext() {
+                        return curr.previousVersion != null;
+                    }
+
+                    private Modification<T> getDifferenceWithPrevious() {
+                        if (curr.previousVersion == null) {
+                            return new Modification<>(curr.size - 1, curr.get(curr.size - 1));
+                        }
+
+                        var n1 = curr.root;
+                        var n2 = curr.previousVersion.root;
+                        int c = -1;
+                        while (n1 != null && n2 != null && n1.next != n2.next) {
+                            c++;
+                            n1 = n1.next;
+                            n2 = n2.next;
+                        }
+                        if (n1 == null || n2 == null) {
+                            return new Modification<>(curr.size - 1, curr.get(curr.size - 1));
+                        }
+                        return new Modification<>(c, curr.get(c));
+                    }
+
+                    @Override
+                    public Modification<T> next() {
+                        if (!hasNext()) {
+                            throw new NoSuchElementException();
+                        }
+                        var r = getDifferenceWithPrevious();
+                        curr = curr.previousVersion;
+                        return r;
+                    }
+                };
+            }
+
+            @Override
+            public int size() {
+                return numberOfVersions;
+            }
+        };
     }
 }

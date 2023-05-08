@@ -96,7 +96,7 @@ public class PersistentArrayImpl<T extends Serializable> implements PersistentAr
     @Override
     public Iterator<T> iterator() {
         return new Iterator<>() {
-            PersistentArrayNode<T> node = root;
+            private PersistentArrayNode<T> node = root;
 
             @Override
             public boolean hasNext() {

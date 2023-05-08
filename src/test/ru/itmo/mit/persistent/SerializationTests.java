@@ -37,7 +37,7 @@ public class SerializationTests {
             var b1 = b.getPreviousVersion(i);
             assertEquals(a1.getSize(), b1.getSize());
             for (int j = 0; j < a1.getSize(); j++) {
-                assertEquals(a1.get(i), b1.get(i));
+                assertEquals(a1.get(j), b1.get(j));
             }
         }
     }

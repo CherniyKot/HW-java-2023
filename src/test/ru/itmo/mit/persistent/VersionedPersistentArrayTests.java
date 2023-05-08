@@ -94,4 +94,28 @@ public class VersionedPersistentArrayTests {
         assertEquals(a2, i3);
         assertEquals(a2.getPreviousVersion(1), i4);
     }
+
+    @Test
+    public void versionedPersistentArrayGetHistoryTest(){
+        var a = new VersionedPersistentArrayImpl<Integer>().set(3, 3).set(2, 2).set(9, 10).set(1, 0);
+        var history = a.getHistory();
+        var hit = history.iterator();
+        var m0 = hit.next();
+        var m1 = hit.next();
+        var m2 = hit.next();
+        var m3 = hit.next();
+        assertThrows(NoSuchElementException.class, hit::next);
+
+        assertEquals(1,m0.getPosition());
+        assertEquals(0,m0.getValue());
+
+        assertEquals(9,m1.getPosition());
+        assertEquals(10,m1.getValue());
+
+        assertEquals(2,m2.getPosition());
+        assertEquals(2,m2.getValue());
+
+        assertEquals(3,m3.getPosition());
+        assertEquals(3,m3.getValue());
+    }
 }
